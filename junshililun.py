@@ -57,6 +57,7 @@ def watch_video(x,driver,all_course):
                 random_choice+=1#随机选一个
                 if random_choice >= 4:
                     print('第'+str(x)+'是多选')
+                    wrong_list=x
                     break
                 question=None
                 try:
