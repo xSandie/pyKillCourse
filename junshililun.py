@@ -6,6 +6,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 
+# 18161712640
+# gaizuodeshi0108
 
 def watch_video(x,driver,all_course):
     all_course[x].click()
@@ -29,6 +31,11 @@ def watch_video(x,driver,all_course):
         # print(find_time_object[0])
         # print(find_time_object[0].is_displayed())#确实被隐藏了，注意是个list
         find_time=find_time_object[0].get_attribute('textContent')#获取隐藏元素
+
+        if find_time==0:
+            time.sleep(30)#如果还没获取到，再等半分钟
+            find_time = find_time_object[0].get_attribute('textContent')  # 获取隐藏元素
+
         m, s = find_time.strip().split(":")
         m=int(m)
         print(m)
@@ -43,21 +50,25 @@ def watch_video(x,driver,all_course):
                 pass
             if question!=None:
                 ans=driver.find_elements_by_name('ans-videoquiz-opt')
-                print(ans)
-                ans[random_choice%2].click()
+                print("尝试第"+str(random_choice+1)+"次做题")
+                ans[random_choice].click()
                 submit=driver.find_element_by_class_name('ans-videoquiz-submit')
                 submit.click()
                 random_choice+=1#随机选一个
+                if random_choice >= 4:
+                    print('第'+str(x)+'是多选')
+                    break
                 question=None
                 try:
                     driver.switch_to.default_content()
-                    wrong_ans=driver.switch_to.alert
-                    time.sleep(1)
-                    if wrong_ans:
-                        print('得到wrong_ans对象,回答错误')
-                        wrong_ans.accept()
-                        print('已点击确认')
+                    # wrong_ans=driver.switch_to.alert
+                    # time.sleep(1)
+                    # if wrong_ans:
+                    #     print('得到wrong_ans对象,回答错误')
+                    #     wrong_ans.accept()
+                    #     print('已点击确认')
                 except:
+                    driver.switch_to.default_content()#尝试卡bug
                     pass
                 #切换frame
                 driver.switch_to.frame('iframe')
@@ -72,7 +83,7 @@ def watch_video(x,driver,all_course):
         print("======================================")
 
     except Exception as e:
-        print(e)
+        # print(e)
         print("第"+str(x)+'出错'+"====极可能是答题块内部出错")
         wrong_list=x
     driver.switch_to.default_content()#回到主frame
@@ -88,7 +99,7 @@ if __name__=='__main__':
     driver.maximize_window()
     course_len=len(all_course)
     print("总共"+str(course_len)+"节课")
-    i=41#开始课程序号
+    i=51#开始课程序号
     wrong_list=[]
 
     print("第一遍执行刷课")
@@ -102,11 +113,16 @@ if __name__=='__main__':
             driver,wl=watch_video(i,driver,all_course)
         except Exception as e:
             print(str(i)+"出错")
-            print(e)
+            # print(e)
             print("======================================")
             wl=i
         if wl:
-            driver.refresh()
+            try:
+                driver.refresh()
+            except:
+                print("可能断网了")
+                print("此时出错列表")
+                print(wrong_list)
             all_course= WebDriverWait(driver, 30).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "ncells")))
             wrong_list.append(wl)
         i+=1
@@ -119,12 +135,12 @@ if __name__=='__main__':
             for item in wrong_list:
                 item=int(item)
                 try:
-                    driver, wl = watch_video(i, driver, all_course)
+                    driver, wl = watch_video(item, driver, all_course)
                 except Exception as e:
-                    print(str(i) + "出错")
-                    print(e)
+                    print(str(item) + "出错")
+                    # print(e)
                     print("======================================")
-                    wl = i
+                    wl = item
                 if wl:
                     driver.refresh()
                     all_course = WebDriverWait(driver, 30).until(EC.presence_of_all_elements_located((By.CLASS_NAME,"ncells")))
