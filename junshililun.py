@@ -104,7 +104,7 @@ if __name__=='__main__':
     wrong_list=[]
 
     print("第一遍执行刷课")
-    while i<=course_len:
+    for i in [20,21,23,27,32,34,37]:
         print("执行"+str(i)+"的当前driver")
         print(driver)
 
@@ -136,6 +136,7 @@ if __name__=='__main__':
             for item in wrong_list:
                 item=int(item)
                 try:
+                    all_course = WebDriverWait(driver, 30).until(EC.presence_of_all_elements_located((By.CLASS_NAME,"ncells")))
                     driver, wl = watch_video(item, driver, all_course)
                 except Exception as e:
                     print(str(item) + "出错")
@@ -144,7 +145,6 @@ if __name__=='__main__':
                     wl = item
                 if wl:
                     driver.refresh()
-                    all_course = WebDriverWait(driver, 30).until(EC.presence_of_all_elements_located((By.CLASS_NAME,"ncells")))
                     wrong_list.append(wl)
                 else:
                     wrong_list.remove(item)
