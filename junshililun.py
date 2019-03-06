@@ -17,12 +17,21 @@ config_filepath = os.path.join(root_dir, 'config1.ini')
 config = configparser.ConfigParser()
 config.read(config_filepath, encoding='utf-8')
 
-#切换frame
+#切换到视频播放器frame
 @contextmanager
 def enter_iframe(driver):
     driver.switch_to.frame('iframe')
+    driver.switch_to.frame(driver.find_element_by_class_name(str(config.get('cls', 'video_frame'))))
     yield
-    driver.switch_to.parent_frame()
+    driver.switch_to.default_content()
+
+#尝试获取元素
+@contextmanager
+def attempt_get():
+    try:
+        yield
+    except Exception as e:
+        pass
 
 #进行登陆
 def login(driver):
@@ -33,46 +42,131 @@ def login(driver):
     driver.find_element_by_name('uname').send_keys(ac)
     driver.find_element_by_name('password').send_keys(pswd)
 
-#todo 获得所有课程，数据结构还需要确定。
+def get_course_name(ele):
+    '''
+    找到课程元素中的课程名称
+    :param ele:包含课程名的那一个大div
+    :return:
+    name:课程名称
+    '''
+    name = ele.find_elements_by_tag_name('span')[-1].text.strip()
+    return name
+
 def get_all_courses(driver):
+    '''
+    获得所有课程
+    :param driver:停留在主文档的driver
+    :return:
+    todo_ele_lst:待刷的课程
+    normal_lst:使用正常逻辑刷就可以的课程
+    abnormal_lst:不同于使用正常逻辑刷课的课程
+    '''
     ret_dic = {}#以字典形式返回，包括课程目录，需特殊对待的课程
     driver.maximize_window()  # 最大化窗口，方便定位和点击（headless模式下不需要）
     all_courses = WebDriverWait(driver, 30).until(EC.presence_of_all_elements_located((
         By.CLASS_NAME, config.get('cls', 'courses_total'))))#等待30秒，直到课程目录出现
+    # 待刷的所有课程
+    ret_dic['unfinishedname_lst'] = []
+    for course in all_courses:
+        indicator = course.find_element_by_class_name(config.get('cls', 'circle_indicator')).text.strip()
+        c_name = get_course_name(course)
+        if indicator == '2' and c_name != config.get('courses', 'exception1'):
+            ret_dic['unfinishedname_lst'].append(course)
+
     courses_tree = driver.find_element_by_class_name(config.get('cls', 'courses_tree'))#获得课程目录树
     all_divs = courses_tree.find_elements_by_tag_name('div')#所有后代div 有单元有课程
     ret_dic['have_goal_text'] = []  # 找到所有具有学习目标的课程，需特殊对待
-    ret_dic['have_goal_eles'] = []  # 找到所有具有学习目标的课程，需特殊对待
-    ret_dic['normal_text'] = {}#用于刷正常课
-    section_name = ''#单元名，会被覆盖
+    ret_dic['normal_text'] = []#用于刷正常课
     for div in all_divs:
         if div.get_attribute('class') == config.get('cls', 'section'):#是单元
-            section_name = div.find_element_by_class_name(config.get('cls', 'section_name')).text.strip()#单元名
             have_goal_ele = div.find_element_by_class_name(config.get('cls', 'courses_total'))#此单元中含有学习目标的课程webelement
-            ret_dic['have_goal'].append(have_goal_ele.text.strip())
-            ret_dic['have_goal_eles'].append(have_goal_ele)#特殊对待的元素
+            ele_name = get_course_name(have_goal_ele)
+            ret_dic['have_goal_text'].append(ele_name)
         elif div.get_attribute('class') == config.get('cls', 'courses_total'):#是正常课程
-            if div.text.strip() in ret_dic['have_goal']:
-                pass
-            else:
-                ret_dic['normal_eles'][section_name].append(div)
+            ele_name = get_course_name(div)
+            ret_dic['normal_text'].append(ele_name)
+    todo_ele_lst = ret_dic['unfinishedname_lst']
+    normal_lst = ret_dic['normal_text']
+    abnormal_lst = ret_dic['have_goal_text']
 
-    normal_eles = ret_dic['normal_eles']
-    abnormal_eles = ret_dic['have_goal_eles']
-    ret_dic['finishedname_lst'] = []#已完成刷课的课程，标题名
-    ret_dic['errorname_lst'] = []#出错的课程，标题名
-    ret_dic['unfinishedname_lst'] = []#未完成的课程，标题名
-    return ret_dic
+    return todo_ele_lst, normal_lst, abnormal_lst
 
-#todo 通过课程名找到开始的序号
-def find_start_index(course_name,):
-    pass
-#todo 开始刷课
-def watch_video(driver, course_name, normal_courses, abnormal_courses):
-    pass
+
+def show_abnormal_video(course_ele, driver):
+    course_ele.click()
+    video_ele = WebDriverWait(driver, 30).until(
+        EC.presence_of_all_elements_located((By.CLASS_NAME, config.get('cls', 'video_btn'))))
+    video_ele[0].click()
+    WebDriverWait(driver, 30).until(
+        EC.presence_of_all_elements_located((By.ID, 'iframe')))
+    time.sleep(3)
+
+def show_normal_video(course_ele, driver):
+    '''
+    从正常元素中得到可点击的视频
+    :param course_ele: 可点击的课程目录标题
+    :param driver: 在主frame的driver
+    '''
+    course_ele.click()
+    WebDriverWait(driver, 30).until(
+        EC.presence_of_all_elements_located((By.ID, 'iframe')))
+    driver.switch_to.parent_frame()
+    time.sleep(3)
+
+#todo 开始看视频
+def watch_video(driver):
+    video_start_btn = WebDriverWait(driver, 30).until(
+        EC.presence_of_all_elements_located((By.CLASS_NAME, str(config.get('cls','head_play_btn')))))[0]
+    video_start_btn.click()
+    video = driver.find_element_by_tag_name('video')
+    ActionChains(driver).move_to_element(video).perform()
+    time.sleep(3)
+    begin_time = time.time()
+    with attempt_get():
+        time_object = WebDriverWait(driver, 30).until(
+        EC.presence_of_all_elements_located((By.CLASS_NAME, str(config.get('cls','duration')))))[0]
+        find_time = time_object.get_attribute('textContent')  # 获取隐藏元素
+        if find_time == 0:
+            time.sleep(30)  # 如果还没获取到，再等半分钟
+            find_time = time_object.get_attribute('textContent')  # 获取隐藏元素
+        minutes, _ = find_time.strip().split(":")
+        minutes = int(minutes)
+        end_time = begin_time + 60 * (minutes + 2)
+        print('视频时长：'+str(minutes)+'分钟')
+        while time.time() < end_time:
+            with attempt_get():
+                question = driver.find_element_by_class_name(str(config.get('cls','quiz')))
+                if question != None:
+                    QA(driver)
+
+
+
+
+
 
 #todo 做视频中的题目
-def video_quiez():
+def QA(driver):
+    single_quiz(driver)
+    pass
+#todo 做视频中的单选
+def single_quiz(driver):
+    random_choice = 0
+    ans_length = 0
+    try:
+        while True:
+            ans = driver.find_elements_by_name(str(config.get('name','ans_opt')))
+            ans_length = len(ans)
+            ans[random_choice].click()
+            submit = driver.find_element_by_class_name(str(config.get('cls','quiz_submit')))
+            submit.click()
+            random_choice += 1  # 随机选一个
+    except Exception as e:
+        if random_choice >= ans_length:
+            raise Exception()#如果单选选大于选项数量次还没选中，抛出异常
+        pass
+
+#todo 多选题
+def muti_quiz():
     pass
 
 #todo 做课程后的题目
@@ -108,7 +202,6 @@ def watch_video_legacy(x,driver,all_course):
 
         m, s = find_time.strip().split(":")
         m=int(m)
-        print(m)
         s=int(s)
         end_time=begin_time+60*(m+2)
         question=None
@@ -164,7 +257,22 @@ def watch_video_legacy(x,driver,all_course):
 if __name__=='__main__':
     driver = webdriver.Firefox()
     login(driver)
-    courses_dic = get_all_courses(driver)
+    errorname_lst = []
+    while True:
+        todo_ele_lst, normal_lst, abnormal_lst = get_all_courses(driver)
+        print('待刷课程：' + str(len(todo_ele_lst)) + '个')
+        ele = todo_ele_lst[0]#每次取最早的没刷的
+        c_name = get_course_name(ele)
+        if c_name in abnormal_lst:#不能使用正常方法刷
+            show_abnormal_video(ele, driver)
+            with enter_iframe(driver):
+                watch_video(driver)
+        elif c_name in normal_lst:#能用正常方法刷
+            show_normal_video(ele, driver)
+            with enter_iframe(driver):
+                watch_video(driver)
+        # if not errorname_lst:
+        #     break
     # time.sleep(30)#输入账号密码的时间
     # all_course = WebDriverWait(driver, 30).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "ncells")))
     # driver.maximize_window()
