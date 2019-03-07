@@ -1,4 +1,5 @@
 # -*- coding:utf-8 -*- 
+import itertools
 import os
 
 from selenium.webdriver.common.action_chains import ActionChains
@@ -140,13 +141,17 @@ def watch_video(driver):
         minutes = int(minutes)
         end_time = begin_time + 60 * (minutes + 2)
         print('视频时长：'+str(minutes)+'分钟')
+        question = None
         while time.time() < end_time:
             with attempt_get():
                 question = driver.find_element_by_class_name(str(config.get('cls','quiz')))
-                if question != None:
-                    QA(driver)
+            if question != None:
+                QA(driver)
+            question = None
             video = driver.find_element_by_tag_name('video')
-            ActionChains(driver).move_to_element(video).perform()
+            if driver.find_elements_by_class_name(str(config.get('cls','pause'))):
+                video.click()
+                ActionChains(driver).move_to_element(video).perform()
             time.sleep(10)#每10秒移上一次
 
 
@@ -162,6 +167,7 @@ def QA(driver):
 def single_quiz(driver):
     random_choice = 0
     ans_length = 0
+    print('有单选')
     try:
         while True:
             ans = driver.find_elements_by_name(str(config.get('name','ans_opt')))
@@ -170,15 +176,37 @@ def single_quiz(driver):
             submit = driver.find_element_by_class_name(str(config.get('cls','quiz_submit')))
             submit.click()
             random_choice += 1  # 随机选一个
+            with attempt_get():
+                driver.switch_to.alert.accept()
+            print('第' + str(random_choice) + '次做题')
             time.sleep(2)#睡两秒再做
     except Exception as e:
-        if random_choice >= ans_length:
+        if random_choice > ans_length:
             raise Exception()#如果单选选大于选项数量次还没选中，抛出异常
         pass
 
 #todo 多选题
-def muti_quiz():
-    pass
+def muti_quiz(driver):
+    ans_length = 0
+    print('有多选')
+    choose_indecator = 2#多选的选中数量指示器
+    try:
+        while True:
+            ans = driver.find_elements_by_name(str(config.get('name', 'ans_opt')))
+            ans_length = len(ans)
+            all_choices = (i for i in range(0, ans_length+1))#生成可选选项的序号列表【0，1，2，3】
+            for choice in itertools.combinations(all_choices, choose_indecator):
+                for opt in choice:
+                    ans[opt].click()#选择选项
+                submit = driver.find_element_by_class_name(str(config.get('cls', 'quiz_submit')))
+                submit.click()#提交
+                print('第' + str(choose_indecator - 1) + '次做题'
+                          + '，共' + str(ans_length) + '个选项，' +
+                      '选中' + str(choice))
+            choose_indecator += 1#选更多的选项
+    except Exception as e:
+        pass
+
 
 #todo 做课程后的题目
 def course_quiez():
@@ -285,62 +313,5 @@ if __name__=='__main__':
             show_normal_video(ele, driver)
             with enter_iframe(driver):
                 watch_video(driver)
-        # if not errorname_lst:
-        #     break
-    # time.sleep(30)#输入账号密码的时间
-    # all_course = WebDriverWait(driver, 30).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "ncells")))
-    # driver.maximize_window()
-    # course_len=len(all_course)
-    # print("总共"+str(course_len)+"节课")
-    # i=51#开始课程序号
-    # wrong_list=[]
 
-    # print("第一遍执行刷课")
-    # for i in [20,21,23,27,32,34,37]:
-    #     print("执行"+str(i)+"的当前driver")
-    #     print(driver)
-    #
-    #     try:
-    #         all_course= WebDriverWait(driver, 30).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "ncells")))
-    #         #出错原因怀疑是all_course太长，缓存不够，所以重新获取一次
-    #         driver,wl=watch_video(i,driver,all_course)
-    #     except Exception as e:
-    #         print(str(i)+"出错")
-    #         # print(e)
-    #         print("======================================")
-    #         wl=i
-    #     if wl:
-    #         try:
-    #             driver.refresh()
-    #         except:
-    #             print("可能断网了")
-    #             print("此时出错列表")
-    #             print(wrong_list)
-    #         all_course= WebDriverWait(driver, 30).until(EC.presence_of_all_elements_located((By.CLASS_NAME, "ncells")))
-    #         wrong_list.append(wl)
-    #     i+=1
-    #
-    # print("回刷出错课程")
-    # while True:
-    #     print('剩余出错课程：')
-    #     print(wrong_list)
-    #     if wrong_list:
-    #         for item in wrong_list:
-    #             item=int(item)
-    #             try:
-    #                 all_course = WebDriverWait(driver, 30).until(EC.presence_of_all_elements_located((By.CLASS_NAME,"ncells")))
-    #                 driver, wl = watch_video(item, driver, all_course)
-    #             except Exception as e:
-    #                 print(str(item) + "出错")
-    #                 # print(e)
-    #                 print("======================================")
-    #                 wl = item
-    #             if wl:
-    #                 driver.refresh()
-    #                 wrong_list.append(wl)
-    #             else:
-    #                 wrong_list.remove(item)
-    #     else:
-    #         print('---------------------all done------------------')
-    #         break
 
