@@ -21,7 +21,9 @@ config.read(config_filepath, encoding='utf-8')
 @contextmanager
 def enter_iframe(driver):
     driver.switch_to.frame('iframe')
-    driver.switch_to.frame(driver.find_element_by_class_name(str(config.get('cls', 'video_frame'))))
+    video_iframe = WebDriverWait(driver, 30).until(EC.presence_of_all_elements_located((
+        By.CLASS_NAME, str(config.get('cls', 'video_frame')))))[0]#等待30秒直到能切换进iframe
+    driver.switch_to.frame(video_iframe)
     yield
     driver.switch_to.default_content()
 
@@ -63,8 +65,11 @@ def get_all_courses(driver):
     '''
     ret_dic = {}#以字典形式返回，包括课程目录，需特殊对待的课程
     driver.maximize_window()  # 最大化窗口，方便定位和点击（headless模式下不需要）
-    all_courses = WebDriverWait(driver, 30).until(EC.presence_of_all_elements_located((
-        By.CLASS_NAME, config.get('cls', 'courses_total'))))#等待30秒，直到课程目录出现
+
+    temp_courses = WebDriverWait(driver, 30).until(EC.presence_of_all_elements_located((
+        By.CLASS_NAME, config.get('cls', 'courses_total'))))#等待30秒，直到课程目录出现，但是出现后页面还是会被js刷新
+    time.sleep(10)  # 页面加载js时间
+    all_courses = driver.find_elements_by_class_name(config.get('cls', 'courses_total'))
     # 待刷的所有课程
     ret_dic['unfinishedname_lst'] = []
     for course in all_courses:
@@ -88,18 +93,19 @@ def get_all_courses(driver):
     todo_ele_lst = ret_dic['unfinishedname_lst']
     normal_lst = ret_dic['normal_text']
     abnormal_lst = ret_dic['have_goal_text']
-
+    time.sleep(3)#等待页面刷新，免得元素过期
     return todo_ele_lst, normal_lst, abnormal_lst
 
 
 def show_abnormal_video(course_ele, driver):
+    time.sleep(3)
     course_ele.click()
     video_ele = WebDriverWait(driver, 30).until(
         EC.presence_of_all_elements_located((By.CLASS_NAME, config.get('cls', 'video_btn'))))
     video_ele[0].click()
     WebDriverWait(driver, 30).until(
         EC.presence_of_all_elements_located((By.ID, 'iframe')))
-    time.sleep(3)
+
 
 def show_normal_video(course_ele, driver):
     '''
@@ -107,11 +113,12 @@ def show_normal_video(course_ele, driver):
     :param course_ele: 可点击的课程目录标题
     :param driver: 在主frame的driver
     '''
+    time.sleep(3)
     course_ele.click()
     WebDriverWait(driver, 30).until(
         EC.presence_of_all_elements_located((By.ID, 'iframe')))
     driver.switch_to.parent_frame()
-    time.sleep(3)
+
 
 #todo 开始看视频
 def watch_video(driver):
@@ -122,7 +129,7 @@ def watch_video(driver):
     ActionChains(driver).move_to_element(video).perform()
     time.sleep(3)
     begin_time = time.time()
-    with attempt_get():
+    with attempt_get():#todo 改成while True
         time_object = WebDriverWait(driver, 30).until(
         EC.presence_of_all_elements_located((By.CLASS_NAME, str(config.get('cls','duration')))))[0]
         find_time = time_object.get_attribute('textContent')  # 获取隐藏元素
@@ -138,6 +145,9 @@ def watch_video(driver):
                 question = driver.find_element_by_class_name(str(config.get('cls','quiz')))
                 if question != None:
                     QA(driver)
+            video = driver.find_element_by_tag_name('video')
+            ActionChains(driver).move_to_element(video).perform()
+            time.sleep(10)#每10秒移上一次
 
 
 
@@ -160,6 +170,7 @@ def single_quiz(driver):
             submit = driver.find_element_by_class_name(str(config.get('cls','quiz_submit')))
             submit.click()
             random_choice += 1  # 随机选一个
+            time.sleep(2)#睡两秒再做
     except Exception as e:
         if random_choice >= ans_length:
             raise Exception()#如果单选选大于选项数量次还没选中，抛出异常
@@ -257,11 +268,14 @@ def watch_video_legacy(x,driver,all_course):
 if __name__=='__main__':
     driver = webdriver.Firefox()
     login(driver)
+    todo_ele_lst, normal_lst, abnormal_lst = get_all_courses(driver)
     errorname_lst = []
     while True:
+        # time.sleep(5)  # 等待刷新完成
         todo_ele_lst, normal_lst, abnormal_lst = get_all_courses(driver)
         print('待刷课程：' + str(len(todo_ele_lst)) + '个')
         ele = todo_ele_lst[0]#每次取最早的没刷的
+        time.sleep(5)  # 等待刷新完成
         c_name = get_course_name(ele)
         if c_name in abnormal_lst:#不能使用正常方法刷
             show_abnormal_video(ele, driver)
