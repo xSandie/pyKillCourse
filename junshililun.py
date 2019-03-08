@@ -1,8 +1,9 @@
 # -*- coding:utf-8 -*- 
-import itertools
+import itertools #排列组合
 import os
 
-from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.action_chains import ActionChains #ActionChains是一个底层的自动交互的方法，例如鼠标移动、鼠标按键事件、键盘响应和菜单右击交互。
+                                                                    # 这些对于像悬停和拖拽这种复杂的行为很有用
 from selenium import webdriver
 import time
 from selenium.webdriver.support.ui import WebDriverWait
@@ -12,18 +13,18 @@ import configparser
 from contextlib import contextmanager
 # 获取配置，全局都要用到
 # 项目路径
-root_dir = os.path.split(os.path.realpath(__file__))[0]
+root_dir = os.path.split(os.path.realpath(__file__))[0] #按照路径将文件名和路径分割开
 # config.ini文件路径
-config_filepath = os.path.join(root_dir, 'config1.ini')
-config = configparser.ConfigParser()
+config_filepath = os.path.join(root_dir, 'config1.ini')#路径拼接
+config = configparser.ConfigParser()#ConfigParser 是用来读取配置文件的包
 config.read(config_filepath, encoding='utf-8')
 
 #切换到视频播放器frame
-@contextmanager
+@contextmanager #上下文管理器
 def enter_iframe(driver):
-    driver.switch_to.frame('iframe')
+    driver.switch_to.frame('iframe')  #元素定位
     video_iframe = WebDriverWait(driver, 30).until(EC.presence_of_all_elements_located((
-        By.CLASS_NAME, str(config.get('cls', 'video_frame')))))[0]#等待30秒直到能切换进iframe
+        By.CLASS_NAME, str(config.get('cls', 'video_frame')))))[0]#等待30秒直到能切换进iframe '''判断某个元素是否被加到了dom树里，并不代表该元素一定可见，如果定位到就返回WebElement'''
     driver.switch_to.frame(video_iframe)
     yield
     driver.switch_to.default_content()
@@ -35,6 +36,13 @@ def attempt_get():
         yield
     except Exception as e:
         pass
+
+#提示我可能有bug该调试了
+def bugs_goup():
+    import ctypes
+    player = ctypes.windll.kernel32
+    player.Beep(2000, 5000)  # 发出蜂鸣，2000hz，5s
+
 
 #进行登陆
 def login(driver):
@@ -167,21 +175,25 @@ def QA(driver):
 def single_quiz(driver):
     random_choice = 0
     ans_length = 0
+    last_ans_length = 1
     print('有单选')
     try:
+        bugs_goup()
         while True:
             ans = driver.find_elements_by_name(str(config.get('name','ans_opt')))
             ans_length = len(ans)
             ans[random_choice].click()
+            if ans_length != 0:
+                last_ans_length = ans_length#防止出现关掉之后ans长度变成0的问题
             submit = driver.find_element_by_class_name(str(config.get('cls','quiz_submit')))
             submit.click()
             random_choice += 1  # 随机选一个
             with attempt_get():
-                driver.switch_to.alert.accept()
+                driver.switch_to.alert.accept()#关掉错误提示弹窗
             print('第' + str(random_choice) + '次做题')
             time.sleep(2)#睡两秒再做
     except Exception as e:
-        if random_choice > ans_length:
+        if random_choice > last_ans_length:
             raise Exception()#如果单选选大于选项数量次还没选中，抛出异常
         pass
 
