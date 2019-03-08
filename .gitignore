@@ -1,3 +1,4 @@
 .idea/
 *.log
-config1.ini
+config*.ini
+shuake*.py

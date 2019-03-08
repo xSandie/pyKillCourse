@@ -15,7 +15,7 @@ from contextlib import contextmanager
 # 项目路径
 root_dir = os.path.split(os.path.realpath(__file__))[0] #按照路径将文件名和路径分割开
 # config.ini文件路径
-config_filepath = os.path.join(root_dir, 'config1.ini')#路径拼接
+config_filepath = os.path.join(root_dir, 'config0.ini')#路径拼接
 config = configparser.ConfigParser()#ConfigParser 是用来读取配置文件的包
 config.read(config_filepath, encoding='utf-8')
 
@@ -105,25 +105,34 @@ def get_all_courses(driver):
     time.sleep(3)#等待页面刷新，免得元素过期
     return todo_ele_lst, normal_lst, abnormal_lst
 
+#todo 确认是否得用非常逻辑对待
+def confirm_abnormal(driver):
+    div = driver.find_element_by_class_name(str(config.get('cls','tab_bar')))
+    span_lst = div.find_elements_by_tag_name('span')
+    if len(span_lst) == 3:
+        return True
+    return False
 
-def show_abnormal_video(course_ele, driver):
-    time.sleep(3)
-    course_ele.click()
+#点击课程
+def click_c(course):
+    course.click()
+    time.sleep(5)
+
+#调出不正常课程
+def show_abnormal_video(driver):
     video_ele = WebDriverWait(driver, 30).until(
         EC.presence_of_all_elements_located((By.CLASS_NAME, config.get('cls', 'video_btn'))))
     video_ele[0].click()
     WebDriverWait(driver, 30).until(
         EC.presence_of_all_elements_located((By.ID, 'iframe')))
 
-
-def show_normal_video(course_ele, driver):
+#调出正常课程
+def show_normal_video(driver):
     '''
     从正常元素中得到可点击的视频
     :param course_ele: 可点击的课程目录标题
     :param driver: 在主frame的driver
     '''
-    time.sleep(3)
-    course_ele.click()
     WebDriverWait(driver, 30).until(
         EC.presence_of_all_elements_located((By.ID, 'iframe')))
     driver.switch_to.parent_frame()
@@ -318,11 +327,18 @@ if __name__=='__main__':
         time.sleep(5)  # 等待刷新完成
         c_name = get_course_name(ele)
         if c_name in abnormal_lst:#不能使用正常方法刷
-            show_abnormal_video(ele, driver)
-            with enter_iframe(driver):
-                watch_video(driver)
+            click_c(ele)
+            if confirm_abnormal(driver):
+                show_abnormal_video(driver)
+                with enter_iframe(driver):
+                    watch_video(driver)
+            else:
+                show_normal_video(driver)
+                with enter_iframe(driver):
+                    watch_video(driver)
         elif c_name in normal_lst:#能用正常方法刷
-            show_normal_video(ele, driver)
+            click_c(ele)
+            show_normal_video(driver)
             with enter_iframe(driver):
                 watch_video(driver)
 
