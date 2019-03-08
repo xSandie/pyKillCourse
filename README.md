@@ -2,7 +2,7 @@
 ## 小白如何使用
 
 1. 环境要求：python3.6，火狐浏览器。 
-2. 下载整个项目，解压之后，进入解压之后的文件夹，[在文件夹内打开命令行窗口](https://zhidao.baidu.com/question/368766370936203684.html)。
+2. [下载整个项目（可以不注册账号）](https://jingyan.baidu.com/article/b907e6277ede7e46e7891cf7.html)，解压之后，进入解压之后的文件夹，[在文件夹内打开命令行窗口](https://zhidao.baidu.com/question/368766370936203684.html)。
 3. 在cmd窗口中输入pip install -r requirements.txt --user，等待全部安装完成。 
 4. 用记事本打开config.ini，修改account和password等于号后面的值，其中*password为密码*，*account为账号*。
 5. [运行junshililun.py的python脚本](https://jingyan.baidu.com/article/22fe7ced18776f3002617f2e.html)  
