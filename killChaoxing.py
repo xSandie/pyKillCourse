@@ -94,7 +94,7 @@ def get_all_courses(driver):
     for course in all_courses:
         indicator = course.find_element_by_class_name(config.get('cls', 'circle_indicator')).text.strip()
         c_name = get_course_name(course)
-        if indicator == '2' and c_name != config.get('courses', 'exception1'):
+        if indicator == '2' or c_name == config.get('courses', 'exception1'):
             ret_dic['unfinishedname_lst'].append(course)
 
     courses_tree = driver.find_element_by_class_name(config.get('cls', 'courses_tree'))#获得课程目录树
@@ -103,15 +103,16 @@ def get_all_courses(driver):
     ret_dic['normal_text'] = []#用于刷正常课
     ret_dic['article'] = []#阅读课程
     for div in all_divs:
-        if div.get_attribute('class') == config.get('cls', 'section'):#是单元
+        if div.get_attribute('class') == config.get('cls', 'section') :#是单元
             have_goal_ele = div.find_element_by_class_name(config.get('cls', 'courses_total'))#此单元中含有学习目标的课程webelement
             ele_name = get_course_name(have_goal_ele)
-            ret_dic['have_goal_text'].append(ele_name)
+            if ele_name != config.get('courses', 'exception1'):
+                ret_dic['have_goal_text'].append(ele_name)
         elif div.get_attribute('class') == config.get('cls', 'courses_total'):#是正常课程
             ele_name = get_course_name(div)
-            if ele_name not in ret_dic['have_goal_text']:
+            if ele_name not in ret_dic['have_goal_text'] and ele_name != config.get('courses', 'exception1'):
                 ret_dic['normal_text'].append(ele_name)
-            else:
+            elif ele_name == config.get('courses', 'exception1'):
                 ret_dic['article'].append(ele_name)
     todo_ele_lst = ret_dic['unfinishedname_lst']
     normal_lst = ret_dic['normal_text']
