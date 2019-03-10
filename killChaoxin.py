@@ -16,7 +16,7 @@ from contextlib import contextmanager
 # 项目路径
 root_dir = os.path.split(os.path.realpath(__file__))[0] #按照路径将文件名和路径分割开
 # config.ini文件路径
-config_filepath = os.path.join(root_dir, 'config0.ini')#路径拼接
+config_filepath = os.path.join(root_dir, 'config.ini')#路径拼接
 config = configparser.ConfigParser()#ConfigParser 是用来读取配置文件的包
 config.read(config_filepath, encoding='utf-8')
 
@@ -120,7 +120,7 @@ def get_all_courses(driver):
     time.sleep(3)#等待页面刷新，免得元素过期
     return todo_ele_lst, normal_lst, abnormal_lst, article
 
-#todo 确认是否得用非常逻辑对待
+# 确认是否得用非常逻辑对待
 def confirm_abnormal(driver):
     div = driver.find_element_by_class_name(str(config.get('cls','tab_bar')))
     span_lst = div.find_elements_by_tag_name('span')
@@ -196,7 +196,7 @@ def QA(driver):
     single_quiz(driver)
     pass
 
-#todo 做视频中的单选
+# 做视频中的单选
 def single_quiz(driver):
     random_choice = 0
     ans_length = 0

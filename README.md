@@ -1,5 +1,5 @@
 # 超星尔雅刷课脚本
-写代码不易，求右上角点个star (T_T)
+写代码不易，求右上角点个Star (T_T)
 ## 小白如何使用(大概只需要半小时)
 环境要求：python3.6，火狐浏览器，geckodriver。 
 1. [装好python3.6](https://blog.csdn.net/qq_39313596/article/details/80664945)，并自行装好火狐浏览器。
@@ -7,7 +7,7 @@
 0. 在cmd窗口中输入pip install -r requirements.txt --user，等待全部安装完成。
 0. [下载geckodriver](https://pan.baidu.com/s/1UALN7gJGf7kN-o67ffcSyQ)，提取码：kskb，[配置geckodriver](https://blog.csdn.net/hy_696/article/details/80114065)。 
 0. 用记事本打开并修改config.ini
-0. ```angular2html
+    ```angular2html
     account = 账号（必须是手机号）
     password = 密码
     url = 你登陆并打开到视频播放界面的网址
