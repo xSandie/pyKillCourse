@@ -13,7 +13,7 @@
     url = 你登陆并打开到视频播放界面的网址
     article_url = 打开阅读界面的网址
     ```
-0. [运行killChaoxin.py的python脚本](https://jingyan.baidu.com/article/22fe7ced18776f3002617f2e.html)  
+0. [运行killChaoxing.py的python脚本](https://jingyan.baidu.com/article/22fe7ced18776f3002617f2e.html)  
 0. 之后会弹出浏览器框，30秒内输入账号密码验证码登陆后，挂在电脑后台慢慢等待即可，注意：不要调整浏览器大小就让他保持最大化以免出现问题。
 
 ## 实现细节
