@@ -19,7 +19,7 @@ root_dir = os.path.split(os.path.realpath(__file__))[0]  # 按照路径将文件
 # config.ini文件路径
 config_filepath = os.path.join(root_dir, 'config0.ini')  # 路径拼接
 config = configparser.ConfigParser()  # ConfigParser 是用来读取配置文件的包
-config.read(config_filepath, encoding='utf-8')
+config.read(config_filepath, encoding='utf-8-sig')
 
 
 # 切换到视频播放器frame
