@@ -266,10 +266,10 @@ def kill_article(driver):
     loop_time = 0
     rand_pixel = 100
     while time.time() < end_time:
-        rand_pixel += random.randint(10, 500)
+        rand_pixel += random.randint(10, 100)
         js = f"var q=document.documentElement.scrollTop={rand_pixel}"
         driver.execute_script(js)
-        sleep_time = random.randint(1, 10)
+        sleep_time = random.randint(10, 100)
         time.sleep(sleep_time)
         with attempt_get():  # 让鼠标放在元素上
             main_content = driver.find_element_by_id(config.get('id', 'main_content'))
