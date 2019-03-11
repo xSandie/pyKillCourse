@@ -204,9 +204,11 @@ def watch_video(driver):
 
 # todo 做视频中的题目
 def QA(driver):
-    single_quiz(driver)
-    pass
-
+    title = driver.find_element_by_class_name(config.get('cls', 'quiz')).text.strip()
+    if '多选' in title:
+        muti_quiz(driver)
+    else:
+        single_quiz(driver)
 
 # 做视频中的单选
 def single_quiz(driver):
@@ -250,7 +252,7 @@ def muti_quiz(driver):
                     ans[opt].click()  # 选择选项
                 submit = driver.find_element_by_class_name(str(config.get('cls', 'quiz_submit')))
                 submit.click()  # 提交
-                print('第' + str(choose_indecator - 1) + '次做题'
+                print('选' + str(choose_indecator) + '个选项'
                       + '，共' + str(ans_length) + '个选项，' +
                       '选中' + str(choice))
             choose_indecator += 1  # 选更多的选项
