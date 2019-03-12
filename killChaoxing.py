@@ -255,10 +255,12 @@ def muti_quiz(driver):
                 print('选' + str(choose_indecator) + '个选项'
                       + '，共' + str(ans_length) + '个选项，' +
                       '选中' + str(choice))
+                for _ in range(4):
+                    with attempt_get():
+                        driver.switch_to.alert.accept()  # 关掉错误提示弹窗
             choose_indecator += 1  # 选更多的选项
     except Exception as e:
         pass
-
 
 # todo 解决阅读，轨迹问题未解决
 def kill_article(driver):
