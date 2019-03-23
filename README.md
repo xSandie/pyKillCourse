@@ -4,7 +4,8 @@
 环境要求：python3.6，火狐浏览器，geckodriver。 
 1. [装好python3.6](https://blog.csdn.net/qq_39313596/article/details/80664945)，并自行装好火狐浏览器。
 0. [下载整个项目（可以不注册账号）](https://jingyan.baidu.com/article/b907e6277ede7e46e7891cf7.html)，解压后，进入解压出来的文件夹，[在文件夹内打开命令行窗口](https://zhidao.baidu.com/question/368766370936203684.html)。
-0. 在cmd窗口中输入pip install -r requirements.txt --user，等待全部安装完成。
+0. 在cmd窗口中输入一下命令，等待全部安装完成。
+    ```pip install -r requirements.txt --user```
 0. [下载geckodriver](https://pan.baidu.com/s/1UALN7gJGf7kN-o67ffcSyQ)，提取码：kskb，[配置geckodriver](https://blog.csdn.net/hy_696/article/details/80114065)。 
 0. 用记事本打开并修改config.ini
     ```angular2html
@@ -35,9 +36,12 @@
 
 ## TODO
 - [x]  模块区分
-- [ ]  刷阅读
-- [ ]  自动确认刷完
-- [ ]  自动获取课程正确答案
+- [x]  刷阅读
+- [x]  自动获取课程正确答案
 - [ ]  自动做完课后习题
 - [ ]  修改文档
+
+## BUGS
+ - [ ] 一定概率进入死循环，初步判断是重播按钮出现的缘故
+ - [ ] 当随机验证码弹出时，程序就会崩溃
 
