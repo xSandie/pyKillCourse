@@ -200,6 +200,11 @@ def watch_video(driver):
                 video.click()
                 ActionChains(driver).move_to_element(video).perform()
             time.sleep(10)  # 每10秒移上一次
+            ended = None
+            with attempt_get():
+                ended = driver.find_element_by_class_name(str(config.get('cls', 'ended_btn')))
+            if ended:
+                break
 
 
 # todo 做视频中的题目
