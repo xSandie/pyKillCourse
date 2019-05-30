@@ -17,7 +17,7 @@ from contextlib import contextmanager
 # 项目路径
 root_dir = os.path.split(os.path.realpath(__file__))[0]  # 按照路径将文件名和路径分割开
 # config.ini文件路径
-config_filepath = os.path.join(root_dir, 'config0.ini')  # 路径拼接
+config_filepath = os.path.join(root_dir, 'config.ini')  # 路径拼接
 config = configparser.ConfigParser()  # ConfigParser 是用来读取配置文件的包
 config.read(config_filepath, encoding='utf-8-sig')
 
@@ -103,7 +103,7 @@ def get_all_courses(driver):
     for course in all_courses:
         indicator = course.find_element_by_class_name(config.get('cls', 'circle_indicator')).text.strip()
         c_name = get_course_name(course)
-        if indicator == '2' or c_name == config.get('courses', 'exception1'):
+        if indicator == '2' or config.get('courses', 'exception1') in c_name:
             ret_dic['unfinishedname_lst'].append(course)
 
     courses_tree = driver.find_element_by_class_name(config.get('cls', 'courses_tree'))  # 获得课程目录树
@@ -116,13 +116,13 @@ def get_all_courses(driver):
             have_goal_ele = div.find_element_by_class_name(
                 config.get('cls', 'courses_total'))  # 此单元中含有学习目标的课程webelement
             ele_name = get_course_name(have_goal_ele)
-            if ele_name != config.get('courses', 'exception1'):
+            if config.get('courses', 'exception1') not in ele_name:
                 ret_dic['have_goal_text'].append(ele_name)
         elif div.get_attribute('class') == config.get('cls', 'courses_total'):  # 是正常课程
             ele_name = get_course_name(div)
-            if ele_name not in ret_dic['have_goal_text'] and ele_name != config.get('courses', 'exception1'):
+            if ele_name not in ret_dic['have_goal_text'] and  config.get('courses', 'exception1') not in ele_name:
                 ret_dic['normal_text'].append(ele_name)
-            elif ele_name == config.get('courses', 'exception1'):
+            elif config.get('courses', 'exception1') in ele_name:
                 ret_dic['article'].append(ele_name)
     todo_ele_lst = ret_dic['unfinishedname_lst']
     normal_lst = ret_dic['normal_text']
@@ -320,7 +320,7 @@ if __name__ == '__main__':
         time.sleep(5)  # 等待刷新完成
         c_name = get_course_name(ele)
         if c_name in abnormal_lst:  # 不能使用正常方法刷
-            click_c(ele)
+            click_c(ele.find_elements_by_tag_name('a')[0])
             if confirm_abnormal(driver):
                 show_abnormal_video(driver)
                 with enter_video_iframe(driver):
@@ -329,15 +329,16 @@ if __name__ == '__main__':
                 show_normal_video(driver)
                 with enter_video_iframe(driver):
                     watch_video(driver)
-        elif c_name in normal_lst:  # 能用正常方法刷
-            click_c(ele)
-            show_normal_video(driver)
-            with enter_video_iframe(driver):
-                watch_video(driver)
         elif c_name in article_lst:
             js = 'window.open("' + str(config.get('account', 'article_url')) + '");'
             driver.execute_script(js)
             switch_window(driver)
             kill_article(driver)
+        elif c_name in normal_lst:  # 能用正常方法刷
+            click_c(ele.find_elements_by_tag_name('a')[0])
+            show_normal_video(driver)
+            with enter_video_iframe(driver):
+                watch_video(driver)
+        
         else:
             pass
