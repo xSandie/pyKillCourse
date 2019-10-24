@@ -78,7 +78,8 @@ def get_course_name(ele):
     :return:
     name:课程名称
     '''
-    name = ele.find_elements_by_tag_name('span')[-1].text.strip()
+    # name = ele.find_elements_by_tag_name('span')[-1].text.strip()
+    name = ele.text.strip()
     return name
 
 
@@ -116,7 +117,9 @@ def get_all_courses(driver):
             have_goal_ele = div.find_element_by_class_name(
                 config.get('cls', 'courses_total'))  # 此单元中含有学习目标的课程webelement
             ele_name = get_course_name(have_goal_ele)
-            if config.get('courses', 'exception1') not in ele_name:
+            if config.get('courses', 'exception1') in ele_name:
+                ret_dic['article'].append(ele_name)
+            elif config.get('courses', 'exception1') not in ele_name:
                 ret_dic['have_goal_text'].append(ele_name)
         elif div.get_attribute('class') == config.get('cls', 'courses_total'):  # 是正常课程
             ele_name = get_course_name(div)
@@ -128,6 +131,7 @@ def get_all_courses(driver):
     normal_lst = ret_dic['normal_text']
     abnormal_lst = ret_dic['have_goal_text']
     article = ret_dic['article']
+    todo_ele_lst = todo_ele_lst + article
     time.sleep(3)  # 等待页面刷新，免得元素过期
     return todo_ele_lst, normal_lst, abnormal_lst, article
 
